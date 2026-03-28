@@ -1,0 +1,28 @@
+{
+  "name": "@streakflow/api",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@streakflow/auth": "*",
+    "@streakflow/db": "*",
+    "@streakflow/types": "*",
+    "@trpc/server": "^11.0.0-rc.446",
+    "date-fns": "^3.6.0",
+    "superjson": "^2.2.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@streakflow/config": "*",
+    "@types/node": "^20.14.10",
+    "typescript": "^5.5.4"
+  },
+  "peerDependencies": {
+    "next": "^14.0.0",
+    "next-auth": "^4.0.0"
+  }
+}
