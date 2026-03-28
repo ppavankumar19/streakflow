@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+}
+
+enum Frequency {
+  DAILY
+  WEEKDAYS
+  WEEKENDS
+  CUSTOM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+  INCOMPLETE
+}
+
+enum SpaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ── Auth models (NextAuth) ─────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── Core models ────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  plan          Plan      @default(FREE)
+  trialEndsAt   DateTime?
+
+  accounts         Account[]
+  sessions         Session[]
+  habits           Habit[]
+  tasks            Task[]
+  freezeTokens     FreezeToken[]
+  subscription     Subscription?
+  spaceMemberships SpaceMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Habit {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  color       String    @default("#FF6B1A")
+  icon        String    @default("🔥")
+  frequency   Frequency @default(DAILY)
+  customDays  Int[]
+  archived    Boolean   @default(false)
+  order       Int       @default(0)
+
+  // Streak state (denormalised for fast reads)
+  currentStreak   Int       @default(0)
+  longestStreak   Int       @default(0)
+  lastCompletedAt DateTime?
+
+  spaceId String?
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space        Space?        @relation(fields: [spaceId], references: [id])
+  logs         HabitLog[]
+  freezeTokens FreezeToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, archived])
+  @@index([spaceId])
+}
+
+model HabitLog {
+  id          String   @id @default(cuid())
+  habitId     String
+  date        DateTime @db.Date
+  completedAt DateTime @default(now())
+  note        String?
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([habitId, date])
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  userId       String
+  title        String
+  completed    Boolean    @default(false)
+  completedAt  DateTime?
+  dueDate      DateTime?
+  priority     String?
+  tags         String[]
+  recurring    Frequency?
+  customDays   Int[]
+  autoRollover Boolean    @default(false)
+  parentId     String?
+  order        Int        @default(0)
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Task?  @relation("subtasks", fields: [parentId], references: [id])
+  subtasks Task[] @relation("subtasks")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, completed])
+  @@index([userId, dueDate])
+  @@index([parentId])
+}
+
+model FreezeToken {
+  id         String   @id @default(cuid())
+  userId     String
+  habitId    String
+  usedAt     DateTime @default(now())
+  targetDate DateTime @db.Date
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, targetDate])
+  @@index([userId])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  status               SubscriptionStatus @default(TRIALING)
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Space {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  slug        String  @unique
+
+  members SpaceMember[]
+  habits  Habit[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model SpaceMember {
+  id      String    @id @default(cuid())
+  spaceId String
+  userId  String
+  role    SpaceRole @default(MEMBER)
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now())
+
+  @@unique([spaceId, userId])
+  @@index([userId])
+}
