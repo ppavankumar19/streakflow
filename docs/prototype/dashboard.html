@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StreakFlow — Today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,700;1,9..144,900&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #09090C;
+  --surface:   #111116;
+  --surface-2: #17171E;
+  --surface-3: #1E1E28;
+  --border:    #1B1B24;
+  --border-2:  #26263380;
+
+  --flame:      #FF6B1A;
+  --flame-2:    #FF3D68;
+  --flame-dim:  rgba(255, 107, 26, 0.10);
+  --flame-glow: rgba(255, 107, 26, 0.35);
+
+  --ice:        #4FBEFF;
+  --ice-dim:    rgba(79, 190, 255, 0.10);
+
+  --mint:       #2ECFA0;
+  --mint-dim:   rgba(46, 207, 160, 0.10);
+
+  --gold:       #F5C842;
+  --gold-dim:   rgba(245, 200, 66, 0.10);
+
+  --text:   #EDE8E3;
+  --text-2: #8A8796;
+  --text-3: #3C3A47;
+
+  --ff-display: 'Fraunces', Georgia, serif;
+  --ff-ui:      'Outfit', sans-serif;
+  --ff-mono:    'DM Mono', 'Courier New', monospace;
+
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  14px;
+  --r-xl:  18px;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--ff-ui); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+/* subtle noise grain */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.45;
+}
+
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ────────────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────────────── */
+.sidebar {
+  width: 224px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+  padding: 0;
+  background: var(--bg);
+  position: relative;
+}
+
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 18px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--flame) 0%, var(--flame-2) 100%);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 0 18px var(--flame-glow), 0 2px 8px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+
+.logo-wordmark {
+  font-weight: 700; font-size: 14.5px;
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 14px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  overflow-y: auto;
+}
+
+.sidebar-nav::-webkit-scrollbar { width: 0; }
+
+.nav-label {
+  font-family: var(--ff-mono);
+  font-size: 9px; font-weight: 400;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-3);
+  padding: 12px 10px 5px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  cursor: pointer; color: var(--text-2);
+  font-size: 13.5px; font-weight: 500;
+  transition: all 0.12s ease;
+  text-decoration: none;
+  position: relative;
+  user-select: none;
+}
+
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+
+.nav-item.active {
+  background: var(--flame-dim);
+  color: var(--flame);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 16px;
+  background: linear-gradient(to bottom, var(--flame), var(--flame-2));
+  border-radius: 0 3px 3px 0;
+  box-shadow: 1px 0 8px var(--flame-glow);
+}
+
+.nav-icon {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+  border-radius: 5px;
+}
+
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 6px var(--flame-glow)); }
+
+.nav-pill {
+  margin-left: auto;
+  font-family: var(--ff-mono); font-size: 10px;
+  padding: 1px 7px; border-radius: 20px;
+  background: var(--surface-3); color: var(--text-3);
+}
+
+.nav-item.active .nav-pill {
+  background: rgba(255, 107, 26, 0.15);
+  color: var(--flame);
+}
+
+.sidebar-bottom {
+  border-top: 1px solid var(--border);
+  padding: 12px 10px;
+}
+
+.user-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.user-row:hover { background: var(--surface-2); }
+
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--flame) 0%, var(--flame-2) 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: white;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px var(--flame-glow);
+}
+
+.user-details { flex: 1; min-width: 0; }
+
+.user-name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.user-badge {
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--flame); margin-top: 0px;
+}
+
+/* ────────────────────────────────────────────────
+   MAIN AREA
+───────────────────────────────────────────────── */
+.main {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; min-width: 0;
+}
+
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 24px;
+  height: 56px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.topbar-left { flex: 1; }
+
+.topbar-eyebrow {
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--text-3); letter-spacing: 0.1em;
+  text-transform: uppercase; line-height: 1;
+}
+
+.topbar-heading {
+  font-size: 17px; font-weight: 600;
+  letter-spacing: -0.02em; color: var(--text);
+  line-height: 1.1; margin-top: 1px;
+}
+
+.search-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer; color: var(--text-3);
+  font-size: 12.5px;
+  transition: all 0.15s;
+  width: 210px;
+}
+
+.search-pill:hover { border-color: var(--border-2); color: var(--text-2); }
+
+.search-pill-kbd {
+  margin-left: auto;
+  font-family: var(--ff-mono); font-size: 10px;
+  background: var(--bg); color: var(--text-3);
+  padding: 1px 5px; border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.topbar-btn {
+  width: 32px; height: 32px; border-radius: var(--r-sm);
+  border: none; background: transparent;
+  color: var(--text-2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; transition: all 0.12s;
+}
+
+.topbar-btn:hover { background: var(--surface-2); color: var(--text); }
+
+.content-body {
+  flex: 1; overflow: hidden;
+  display: flex; min-width: 0;
+}
+
+/* ────────────────────────────────────────────────
+   FEED
+───────────────────────────────────────────────── */
+.feed {
+  flex: 1; padding: 28px 24px;
+  overflow-y: auto; min-width: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 36px;
+}
+
+.feed::-webkit-scrollbar { width: 0; }
+
+/* ── Section header */
+.sec {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sec-title {
+  font-family: var(--ff-mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-3); font-weight: 400;
+}
+
+.sec-count {
+  font-family: var(--ff-mono); font-size: 11px;
+  color: var(--text-3);
+}
+
+.sec-action {
+  margin-left: auto;
+  font-size: 12px; color: var(--text-3);
+  cursor: pointer; padding: 3px 7px;
+  border-radius: var(--r-sm);
+  transition: all 0.12s;
+}
+
+.sec-action:hover { color: var(--text-2); background: var(--surface-2); }
+
+/* ── Milestone banner */
+.banner {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(110deg, rgba(255,107,26,0.07) 0%, rgba(255,61,104,0.04) 100%);
+  border: 1px solid rgba(255,107,26,0.18);
+  border-radius: var(--r-lg);
+  animation: fadeUp 0.4s ease both;
+}
+
+.banner-flame {
+  font-size: 30px; line-height: 1;
+  animation: pulseFlame 2.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulseFlame {
+  0%,100% { transform: scale(1) rotate(-2deg); filter: brightness(1); }
+  50%      { transform: scale(1.12) rotate(2deg); filter: brightness(1.2) drop-shadow(0 0 8px var(--flame-glow)); }
+}
+
+.banner-body { flex: 1; }
+
+.banner-tag {
+  font-family: var(--ff-mono); font-size: 9.5px;
+  color: var(--flame); letter-spacing: 0.12em;
+  text-transform: uppercase; margin-bottom: 3px;
+}
+
+.banner-text { font-size: 13.5px; font-weight: 500; color: var(--text); }
+.banner-text strong { color: var(--flame); }
+
+.banner-dismiss {
+  background: none; border: none;
+  color: var(--text-3); font-size: 20px;
+  cursor: pointer; padding: 2px 6px;
+  border-radius: var(--r-sm); transition: color 0.12s;
+  line-height: 1;
+}
+
+.banner-dismiss:hover { color: var(--text-2); }
+
+/* ── Task list */
+.task-list { display: flex; flex-direction: column; gap: 3px; }
+
+.task {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 9px 12px; border-radius: var(--r-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+  animation: fadeUp 0.35s ease both;
+}
+
+.task:hover { background: var(--surface); border-color: var(--border); }
+.task.done { opacity: 0.42; }
+
+.task-box {
+  width: 17px; height: 17px; border-radius: 4px;
+  border: 1.5px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.task.done .task-box {
+  background: var(--mint);
+  border-color: var(--mint);
+}
+
+.task-box .chk {
+  opacity: 0; transform: scale(0.4);
+  transition: all 0.2s ease;
+}
+
+.task.done .task-box .chk { opacity: 1; transform: scale(1); }
+
+.task-body { flex: 1; min-width: 0; }
+
+.task-text {
+  font-size: 14px; font-weight: 400; color: var(--text);
+  transition: color 0.15s; line-height: 1.45;
+}
+
+.task.done .task-text { text-decoration: line-through; color: var(--text-2); }
+
+.task-meta {
+  display: flex; align-items: center; gap: 6px; margin-top: 2px;
+}
+
+.tag {
+  font-family: var(--ff-mono); font-size: 10px;
+  padding: 1px 5px; border-radius: 4px;
+  background: var(--surface-3); color: var(--text-3);
+}
+
+.tag.hi  { background: rgba(255,107,26,0.09); color: var(--flame); }
+.tag.tm  { background: var(--ice-dim);         color: var(--ice);   }
+
+.task-time {
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--text-3);
+}
+
+.add-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; margin-top: 4px;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--border);
+  color: var(--text-3); font-size: 13px;
+  cursor: pointer; transition: all 0.12s;
+}
+
+.add-row:hover { color: var(--text-2); background: var(--surface); border-style: solid; border-color: var(--border-2); }
+
+.add-row kbd {
+  font-family: var(--ff-mono); font-size: 10px;
+  background: var(--surface-3); color: var(--text-3);
+  padding: 1px 5px; border-radius: 4px;
+  border: 1px solid var(--border);
+  margin-left: 2px;
+}
+
+/* ── Habits */
+.habits { display: flex; flex-direction: column; gap: 3px; }
+
+.habit {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: var(--r-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.12s;
+  animation: fadeUp 0.35s ease both;
+}
+
+.habit:hover { background: var(--surface); border-color: var(--border); }
+
+.habit-ring {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+  position: relative; overflow: hidden;
+}
+
+.habit-ring-bg {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: linear-gradient(135deg, var(--flame), var(--flame-2));
+  transform: scale(0);
+  transition: transform 0.25s ease;
+}
+
+.habit.done .habit-ring {
+  border-color: var(--flame);
+  box-shadow: 0 0 10px var(--flame-glow);
+}
+
+.habit.done .habit-ring-bg { transform: scale(1); }
+
+.habit-ring-check {
+  position: relative; z-index: 1;
+  font-size: 11px; opacity: 0; transition: opacity 0.2s;
+}
+
+.habit.done .habit-ring-check { opacity: 1; }
+
+.habit-info { flex: 1; min-width: 0; }
+
+.habit-name { font-size: 13.5px; font-weight: 500; color: var(--text); }
+.habit-sub  { font-size: 11.5px; color: var(--text-2); margin-top: 1px; }
+
+.habit-pips {
+  display: flex; align-items: center; gap: 3px;
+}
+
+.pip {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--surface-3);
+  transition: background 0.2s;
+}
+
+.pip.on  { background: var(--flame); }
+.pip.big { width: 8px; height: 8px; }
+
+.habit-streak {
+  font-family: var(--ff-mono); font-size: 12px;
+  color: var(--text-3); min-width: 40px; text-align: right;
+  transition: color 0.2s;
+}
+
+.habit.done .habit-streak { color: var(--flame); }
+
+/* ────────────────────────────────────────────────
+   RIGHT PANEL
+───────────────────────────────────────────────── */
+.panel {
+  width: 296px; flex-shrink: 0;
+  padding: 28px 20px;
+  overflow-y: auto; background: var(--bg);
+  display: flex; flex-direction: column; gap: 30px;
+}
+
+.panel::-webkit-scrollbar { width: 0; }
+
+/* ── Streak card */
+.streak-card {
+  padding: 16px 16px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.streak-card:hover {
+  border-color: rgba(255,107,26,0.25);
+  background: var(--surface-2);
+}
+
+.streak-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.streak-card-label {
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--text-3); letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.streak-pill {
+  font-family: var(--ff-mono); font-size: 10px;
+  padding: 2px 7px; border-radius: 20px;
+}
+
+.streak-pill.done { background: var(--mint-dim); color: var(--mint); }
+.streak-pill.pend { background: rgba(255,107,26,0.1); color: var(--flame); }
+.streak-pill.none { background: var(--surface-3); color: var(--text-3); }
+
+.streak-num {
+  font-family: var(--ff-display);
+  font-style: italic; font-weight: 900;
+  line-height: 0.88;
+  background: linear-gradient(135deg, var(--flame) 20%, var(--flame-2) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 14px var(--flame-glow));
+  letter-spacing: -0.02em;
+}
+
+.streak-unit {
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--text-3); letter-spacing: 0.08em;
+  margin-top: 4px; margin-bottom: 12px;
+}
+
+.streak-track {
+  height: 2px; background: var(--surface-3);
+  border-radius: 2px; overflow: hidden; margin-bottom: 8px;
+}
+
+.streak-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--flame), var(--flame-2));
+  box-shadow: 0 0 8px var(--flame-glow);
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.streak-footer {
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--text-3);
+}
+
+.streak-footer b { color: var(--flame); font-weight: 400; }
+
+/* mini streak cards row */
+.streak-row {
+  display: flex; gap: 8px;
+}
+
+.streak-mini {
+  flex: 1;
+  padding: 12px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.streak-mini:hover { border-color: rgba(255,107,26,0.2); }
+
+.streak-mini-label {
+  font-family: var(--ff-mono); font-size: 9px;
+  color: var(--text-3); letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.streak-mini-num {
+  font-family: var(--ff-display);
+  font-style: italic; font-weight: 900;
+  font-size: 30px; line-height: 1;
+  background: linear-gradient(135deg, var(--flame), var(--flame-2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px var(--flame-glow));
+}
+
+.streak-mini-sub {
+  font-family: var(--ff-mono); font-size: 9px;
+  color: var(--text-3); margin-top: 2px;
+}
+
+/* ── Heatmap */
+.heatmap-grid {
+  display: flex; flex-direction: column; gap: 3px;
+  margin-top: 12px;
+}
+
+.heatmap-row { display: flex; gap: 3px; }
+
+.hm-cell {
+  width: 13px; height: 13px; border-radius: 3px;
+  background: var(--surface-3);
+  cursor: pointer;
+  transition: transform 0.1s;
+  flex-shrink: 0;
+}
+
+.hm-cell:hover { transform: scale(1.35); z-index: 1; }
+
+.hm-cell[data-v="1"] { background: rgba(255,107,26,0.22); }
+.hm-cell[data-v="2"] { background: rgba(255,107,26,0.48); }
+.hm-cell[data-v="3"] { background: rgba(255,107,26,0.72); }
+.hm-cell[data-v="4"] { background: var(--flame); box-shadow: 0 0 5px var(--flame-glow); }
+
+.hm-months {
+  display: flex; margin-top: 4px; padding: 0 1px;
+}
+
+.hm-month {
+  font-family: var(--ff-mono); font-size: 9px;
+  color: var(--text-3);
+  flex: 1; text-align: center;
+}
+
+/* ── Weekly stats */
+.stats-pair { display: flex; gap: 8px; }
+
+.stat-card {
+  flex: 1; padding: 14px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.stat-val {
+  font-family: var(--ff-mono); font-size: 24px;
+  font-weight: 500; color: var(--text); line-height: 1;
+}
+
+.stat-name {
+  font-size: 11px; color: var(--text-3);
+  margin-top: 4px;
+}
+
+.stat-delta {
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--mint); margin-top: 3px;
+}
+
+/* ────────────────────────────────────────────────
+   COMMAND PALETTE
+───────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(6px);
+  z-index: 900;
+  display: none;
+  align-items: flex-start; justify-content: center;
+  padding-top: 14vh;
+}
+
+.overlay.open { display: flex; animation: fadeIn 0.14s ease; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.palette {
+  width: 560px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 8px 24px rgba(0,0,0,0.4),
+    0 32px 80px rgba(0,0,0,0.5);
+  animation: paletteIn 0.16s cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes paletteIn {
+  from { opacity: 0; transform: translateY(-14px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+.palette-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.palette-icon { color: var(--text-3); font-size: 16px; flex-shrink: 0; }
+
+.palette-inp {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--text); font-family: var(--ff-ui); font-size: 15px;
+  caret-color: var(--flame);
+}
+
+.palette-inp::placeholder { color: var(--text-3); }
+
+.palette-body {
+  padding: 6px; max-height: 340px; overflow-y: auto;
+}
+
+.palette-body::-webkit-scrollbar { width: 0; }
+
+.p-group {
+  font-family: var(--ff-mono); font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-3); padding: 8px 10px 4px;
+}
+
+.p-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--r-sm);
+  cursor: pointer; transition: background 0.1s;
+}
+
+.p-item:hover, .p-item.sel { background: var(--flame-dim); }
+
+.p-item-ico {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--surface-3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+
+.p-item.sel .p-item-ico {
+  background: rgba(255,107,26,0.15);
+}
+
+.p-item-label { flex: 1; font-size: 13.5px; color: var(--text); }
+
+.p-item-kbd {
+  font-family: var(--ff-mono); font-size: 10px;
+  color: var(--text-3);
+  background: var(--surface-3);
+  padding: 2px 6px; border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.palette-foot {
+  display: flex; gap: 14px; align-items: center;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.p-hint {
+  display: flex; align-items: center; gap: 5px;
+  font-family: var(--ff-mono); font-size: 10px; color: var(--text-3);
+}
+
+.p-hint kbd {
+  background: var(--surface-3); border: 1px solid var(--border);
+  padding: 1px 5px; border-radius: 4px;
+  font-family: var(--ff-mono);
+}
+
+/* ── Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+.d0 { animation-delay: 0s;     }
+.d1 { animation-delay: 0.05s;  }
+.d2 { animation-delay: 0.09s;  }
+.d3 { animation-delay: 0.13s;  }
+.d4 { animation-delay: 0.17s;  }
+.d5 { animation-delay: 0.21s;  }
+.d6 { animation-delay: 0.25s;  }
+
+@keyframes completePop {
+  0%   { transform: scale(1);    }
+  35%  { transform: scale(1.04); }
+  100% { transform: scale(1);    }
+}
+
+.completing { animation: completePop 0.3s ease; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ──────────── SIDEBAR ──────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">🔥</div>
+      <span class="logo-wordmark">StreakFlow</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#">
+        <span class="nav-icon">◈</span>
+        Today
+        <span class="nav-pill">3</span>
+      </a>
+      <a class="nav-item" href="#">
+        <span class="nav-icon">◉</span>
+        Habits
+      </a>
+      <a class="nav-item" href="#">
+        <span class="nav-icon">▦</span>
+        Analytics
+      </a>
+      <a class="nav-item" href="#">
+        <span class="nav-icon">⊞</span>
+        Routines
+      </a>
+
+      <div class="nav-label">Workspace</div>
+
+      <a class="nav-item" href="#">
+        <span class="nav-icon">⬡</span>
+        Team Space
+      </a>
+      <a class="nav-item" href="#">
+        <span class="nav-icon">◌</span>
+        Leaderboard
+      </a>
+
+      <div class="nav-label">Account</div>
+
+      <a class="nav-item" href="#">
+        <span class="nav-icon">◁</span>
+        Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="user-row">
+        <div class="avatar">JD</div>
+        <div class="user-details">
+          <div class="user-name">Jordan Davis</div>
+          <div class="user-badge">PRO · 🔥 47-day streak</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ──────────── MAIN ──────────── -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-eyebrow">FRI, 27 MARCH 2026</div>
+        <div class="topbar-heading">Today</div>
+      </div>
+
+      <div class="search-pill" onclick="openPalette()">
+        <span style="font-size:13px">⌕</span>
+        <span>Search or jump to…</span>
+        <span class="search-pill-kbd">⌘K</span>
+      </div>
+
+      <button class="topbar-btn" title="New task (N)">＋</button>
+      <button class="topbar-btn" title="Notifications">🔔</button>
+    </div>
+
+    <div class="content-body">
+
+      <!-- ─── FEED ─── -->
+      <div class="feed">
+
+        <!-- Milestone banner -->
+        <div class="banner d0">
+          <div class="banner-flame">🔥</div>
+          <div class="banner-body">
+            <div class="banner-tag">Milestone unlocked</div>
+            <div class="banner-text">
+              <strong>Morning writing</strong> hits <strong>47 days</strong> — you're in the top 3% globally. Personal record!
+            </div>
+          </div>
+          <button class="banner-dismiss" onclick="this.closest('.banner').style.display='none'">×</button>
+        </div>
+
+        <!-- Tasks -->
+        <div>
+          <div class="sec">
+            <span class="sec-title">Tasks</span>
+            <span class="sec-count" id="taskCount">3 of 6 done</span>
+            <span class="sec-action">Sort ↕</span>
+          </div>
+          <div class="task-list" id="taskList">
+
+            <div class="task done d1" onclick="toggleTask(this)">
+              <div class="task-box">
+                <svg class="chk" width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.2 5.7L8 1" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="task-body">
+                <div class="task-text">Ship authentication PR</div>
+                <div class="task-meta">
+                  <span class="tag">dev</span>
+                  <span class="tag tm">team</span>
+                  <span class="task-time">· done 11:02</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task done d2" onclick="toggleTask(this)">
+              <div class="task-box">
+                <svg class="chk" width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.2 5.7L8 1" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="task-body">
+                <div class="task-text">Morning pages — 3 pages</div>
+                <div class="task-meta">
+                  <span class="tag">writing</span>
+                  <span class="task-time">· done 08:14</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task done d2" onclick="toggleTask(this)">
+              <div class="task-box">
+                <svg class="chk" width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.2 5.7L8 1" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="task-body">
+                <div class="task-text">Review Q1 OKR progress report</div>
+                <div class="task-meta">
+                  <span class="tag hi">high</span>
+                  <span class="task-time">· due today</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task d3" onclick="toggleTask(this)">
+              <div class="task-box">
+                <svg class="chk" width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.2 5.7L8 1" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="task-body">
+                <div class="task-text">Update Prisma schema for user preferences</div>
+                <div class="task-meta">
+                  <span class="tag">dev</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task d4" onclick="toggleTask(this)">
+              <div class="task-box">
+                <svg class="chk" width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.2 5.7L8 1" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="task-body">
+                <div class="task-text">Respond to Marcus's design feedback</div>
+                <div class="task-meta">
+                  <span class="tag tm">team</span>
+                  <span class="task-time">· due today</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="task d5" onclick="toggleTask(this)">
+              <div class="task-box">
+                <svg class="chk" width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.2 5.7L8 1" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="task-body">
+                <div class="task-text">Chapter 4 outline — 30 min deep work</div>
+                <div class="task-meta">
+                  <span class="tag">writing</span>
+                  <span class="task-time">· 3:00 PM</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="add-row">
+            <span style="font-size:15px;opacity:0.4">＋</span>
+            Add a task — press <kbd>N</kbd>
+          </div>
+        </div>
+
+        <!-- Habits -->
+        <div>
+          <div class="sec">
+            <span class="sec-title">Habits Today</span>
+            <span class="sec-count" id="habitCount">2 of 4 done</span>
+            <span class="sec-action">All habits →</span>
+          </div>
+
+          <div class="habits" id="habitList">
+
+            <div class="habit done d1" onclick="toggleHabit(this)">
+              <div class="habit-ring">
+                <div class="habit-ring-bg"></div>
+                <span class="habit-ring-check">✓</span>
+              </div>
+              <div class="habit-info">
+                <div class="habit-name">Morning writing</div>
+                <div class="habit-sub">3 pages · Daily · 08:00</div>
+              </div>
+              <div class="habit-pips">
+                <div class="pip on"></div>
+                <div class="pip on"></div>
+                <div class="pip on"></div>
+                <div class="pip on"></div>
+                <div class="pip on big"></div>
+              </div>
+              <div class="habit-streak">🔥 47</div>
+            </div>
+
+            <div class="habit done d2" onclick="toggleHabit(this)">
+              <div class="habit-ring">
+                <div class="habit-ring-bg"></div>
+                <span class="habit-ring-check">✓</span>
+              </div>
+              <div class="habit-info">
+                <div class="habit-name">Read 30 min</div>
+                <div class="habit-sub">Non-fiction · Daily</div>
+              </div>
+              <div class="habit-pips">
+                <div class="pip on"></div>
+                <div class="pip on"></div>
+                <div class="pip"></div>
+                <div class="pip on"></div>
+                <div class="pip on big"></div>
+              </div>
+              <div class="habit-streak">🔥 23</div>
+            </div>
+
+            <div class="habit d3" onclick="toggleHabit(this)">
+              <div class="habit-ring">
+                <div class="habit-ring-bg"></div>
+                <span class="habit-ring-check">✓</span>
+              </div>
+              <div class="habit-info">
+                <div class="habit-name">Exercise</div>
+                <div class="habit-sub">30 min · Weekdays</div>
+              </div>
+              <div class="habit-pips">
+                <div class="pip on"></div>
+                <div class="pip on"></div>
+                <div class="pip on"></div>
+                <div class="pip on"></div>
+                <div class="pip big"></div>
+              </div>
+              <div class="habit-streak" style="color:var(--text-3)">🔥 12</div>
+            </div>
+
+            <div class="habit d4" onclick="toggleHabit(this)">
+              <div class="habit-ring">
+                <div class="habit-ring-bg"></div>
+                <span class="habit-ring-check">✓</span>
+              </div>
+              <div class="habit-info">
+                <div class="habit-name">Meditate</div>
+                <div class="habit-sub">10 min · Daily · Evening</div>
+              </div>
+              <div class="habit-pips">
+                <div class="pip on"></div>
+                <div class="pip"></div>
+                <div class="pip on"></div>
+                <div class="pip on"></div>
+                <div class="pip big"></div>
+              </div>
+              <div class="habit-streak" style="color:var(--text-3)">🔥 8</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ─── RIGHT PANEL ─── -->
+      <aside class="panel">
+
+        <!-- Featured streak card -->
+        <div>
+          <div class="sec" style="margin-bottom:12px">
+            <span class="sec-title">Top Streak</span>
+          </div>
+          <div class="streak-card">
+            <div class="streak-card-head">
+              <span class="streak-card-label">Morning Writing</span>
+              <span class="streak-pill done">Done today</span>
+            </div>
+            <div class="streak-num" style="font-size:64px">47</div>
+            <div class="streak-unit">DAYS &nbsp;·&nbsp; PERSONAL RECORD 🏆</div>
+            <div class="streak-track">
+              <div class="streak-fill" style="width:94%"></div>
+            </div>
+            <div class="streak-footer">
+              Next milestone: <b>50 days</b> — 3 days away
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini streak row -->
+        <div>
+          <div class="sec" style="margin-bottom:10px">
+            <span class="sec-title">Other Streaks</span>
+          </div>
+          <div class="streak-row">
+            <div class="streak-mini">
+              <div class="streak-mini-label">Reading</div>
+              <div class="streak-mini-num">23</div>
+              <div class="streak-mini-sub">🔥 done today</div>
+            </div>
+            <div class="streak-mini">
+              <div class="streak-mini-label">Exercise</div>
+              <div class="streak-mini-num" style="font-size:30px;filter:none;-webkit-text-fill-color:var(--text-2);background:none">12</div>
+              <div class="streak-mini-sub" style="color:var(--flame)">⚡ pending</div>
+            </div>
+            <div class="streak-mini">
+              <div class="streak-mini-label">Meditate</div>
+              <div class="streak-mini-num" style="font-size:30px;filter:none;-webkit-text-fill-color:var(--text-2);background:none">8</div>
+              <div class="streak-mini-sub" style="color:var(--flame)">⚡ pending</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Heatmap -->
+        <div>
+          <div class="sec" style="margin-bottom:0">
+            <span class="sec-title">Morning Writing · 5wk</span>
+            <span class="sec-action" style="font-size:11px">12 mo →</span>
+          </div>
+          <div class="heatmap-grid" id="heatmap"></div>
+          <div class="hm-months">
+            <span class="hm-month">Feb</span>
+            <span class="hm-month"></span>
+            <span class="hm-month">Mar</span>
+            <span class="hm-month"></span>
+            <span class="hm-month">now</span>
+          </div>
+        </div>
+
+        <!-- Weekly stats -->
+        <div>
+          <div class="sec" style="margin-bottom:10px">
+            <span class="sec-title">This Week</span>
+          </div>
+          <div class="stats-pair">
+            <div class="stat-card">
+              <div class="stat-val">18</div>
+              <div class="stat-name">Tasks done</div>
+              <div class="stat-delta">▲ 4 vs last wk</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-val">94%</div>
+              <div class="stat-name">Habit rate</div>
+              <div class="stat-delta">▲ 6% vs last wk</div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+</div>
+
+<!-- ──────────── COMMAND PALETTE ──────────── -->
+<div class="overlay" id="overlay" onclick="onOverlayClick(event)">
+  <div class="palette">
+    <div class="palette-bar">
+      <span class="palette-icon">⌕</span>
+      <input class="palette-inp" id="paletteInput" placeholder="Search tasks, habits, navigate…" autocomplete="off">
+    </div>
+    <div class="palette-body">
+      <div class="p-group">Quick Actions</div>
+      <div class="p-item sel">
+        <div class="p-item-ico">＋</div>
+        <span class="p-item-label">New task</span>
+        <span class="p-item-kbd">N</span>
+      </div>
+      <div class="p-item">
+        <div class="p-item-ico">◉</div>
+        <span class="p-item-label">New habit</span>
+        <span class="p-item-kbd">H</span>
+      </div>
+      <div class="p-item">
+        <div class="p-item-ico">🧊</div>
+        <span class="p-item-label">Use freeze token</span>
+      </div>
+
+      <div class="p-group">Navigate</div>
+      <div class="p-item">
+        <div class="p-item-ico">◈</div>
+        <span class="p-item-label">Today's view</span>
+        <span class="p-item-kbd">G T</span>
+      </div>
+      <div class="p-item">
+        <div class="p-item-ico">▦</div>
+        <span class="p-item-label">Analytics</span>
+        <span class="p-item-kbd">G A</span>
+      </div>
+      <div class="p-item">
+        <div class="p-item-ico">⬡</div>
+        <span class="p-item-label">Team Space · Devs</span>
+      </div>
+
+      <div class="p-group">Habits</div>
+      <div class="p-item">
+        <div class="p-item-ico">🔥</div>
+        <span class="p-item-label">Morning writing · 47 days</span>
+      </div>
+      <div class="p-item">
+        <div class="p-item-ico">📚</div>
+        <span class="p-item-label">Reading · 23 days</span>
+      </div>
+      <div class="p-item">
+        <div class="p-item-ico">🏃</div>
+        <span class="p-item-label">Exercise · 12 days</span>
+      </div>
+    </div>
+    <div class="palette-foot">
+      <div class="p-hint"><kbd>↑↓</kbd> navigate</div>
+      <div class="p-hint"><kbd>↵</kbd> select</div>
+      <div class="p-hint"><kbd>esc</kbd> close</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Task toggle
+function toggleTask(el) {
+  el.classList.add('completing');
+  setTimeout(() => el.classList.remove('completing'), 300);
+  el.classList.toggle('done');
+  updateTaskCount();
+}
+
+function updateTaskCount() {
+  const all  = document.querySelectorAll('#taskList .task').length;
+  const done = document.querySelectorAll('#taskList .task.done').length;
+  document.getElementById('taskCount').textContent = `${done} of ${all} done`;
+}
+
+// ── Habit toggle
+function toggleHabit(el) {
+  el.classList.toggle('done');
+  const badge = el.querySelector('.habit-streak');
+  badge.style.color = el.classList.contains('done') ? 'var(--flame)' : 'var(--text-3)';
+  updateHabitCount();
+}
+
+function updateHabitCount() {
+  const all  = document.querySelectorAll('#habitList .habit').length;
+  const done = document.querySelectorAll('#habitList .habit.done').length;
+  document.getElementById('habitCount').textContent = `${done} of ${all} done`;
+}
+
+// ── Command palette
+function openPalette() {
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('paletteInput').focus(), 30);
+}
+
+function closePalette() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function onOverlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closePalette();
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    openPalette();
+  }
+  if (e.key === 'Escape') closePalette();
+});
+
+// Palette hover selection
+document.querySelectorAll('.p-item').forEach(item => {
+  item.addEventListener('mouseenter', () => {
+    document.querySelectorAll('.p-item').forEach(i => i.classList.remove('sel'));
+    item.classList.add('sel');
+  });
+});
+
+// ── Keyboard nav in palette
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('overlay').classList.contains('open')) return;
+  const items = [...document.querySelectorAll('.p-item')];
+  const cur = items.findIndex(i => i.classList.contains('sel'));
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    items.forEach(i => i.classList.remove('sel'));
+    items[(cur + 1) % items.length].classList.add('sel');
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    items.forEach(i => i.classList.remove('sel'));
+    items[(cur - 1 + items.length) % items.length].classList.add('sel');
+  }
+});
+
+// ── Heatmap generation
+(function buildHeatmap() {
+  const grid = document.getElementById('heatmap');
+  const WEEKS = 5, DAYS = 7;
+  // Seed: last 5 weeks of writing. Mostly level 4, a few misses.
+  const missed = new Set([3, 10, 22]);
+  for (let w = 0; w < WEEKS; w++) {
+    const row = document.createElement('div');
+    row.className = 'heatmap-row';
+    for (let d = 0; d < DAYS; d++) {
+      const idx = w * DAYS + d;
+      const isToday = idx === WEEKS * DAYS - 1;
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell';
+      let level = 0;
+      if (!missed.has(idx)) {
+        if (idx < 5) level = Math.random() > 0.4 ? 2 : 1;
+        else level = isToday ? 4 : (Math.random() > 0.1 ? 4 : 3);
+      }
+      if (level > 0) cell.setAttribute('data-v', level);
+      if (isToday) cell.style.outline = '2px solid rgba(255,107,26,0.6)';
+      cell.title = level === 0 ? 'Missed' : `Completed · level ${level}`;
+      row.appendChild(cell);
+    }
+    grid.appendChild(row);
+  }
+})();
+</script>
+</body>
+</html>
