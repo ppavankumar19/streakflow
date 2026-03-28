@@ -1,0 +1,49 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+.next
+.turbo
+dist
+build
+out
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Prisma
+packages/db/node_modules/.prisma
+
+# Testing
+coverage
+playwright-report
+test-results
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vercel
+.vercel
+
+# Turbo
+.turbo
