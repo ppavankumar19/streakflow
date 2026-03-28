@@ -1,0 +1,8 @@
+{
+  "extends": "@streakflow/config/tsconfig/base",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src/**/*.ts"]
+}

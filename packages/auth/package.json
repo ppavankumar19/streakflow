@@ -1,0 +1,23 @@
+{
+  "name": "@streakflow/auth",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.4.2",
+    "@streakflow/db": "*",
+    "next-auth": "^4.24.7"
+  },
+  "devDependencies": {
+    "@streakflow/config": "*",
+    "@types/node": "^20.14.10",
+    "typescript": "^5.5.4"
+  },
+  "peerDependencies": {
+    "next": "^14.0.0"
+  }
+}
